@@ -42,14 +42,18 @@
 @property (nonatomic, unsafe_unretained, readwrite) id <ReaderViewControllerDelegate> delegate;
 @property (nonatomic, setter=setToolbarHidden:) BOOL toolbarHidden;
 @property (nonatomic, setter=setPagebarHidden:) BOOL pagebarHidden;
+@property (nonatomic, setter=setDocument:) ReaderDocument *document;
 
 - (id)initWithReaderDocument:(ReaderDocument *)object;
 
 - (void)setToolbarHidden:(BOOL)yesOrNo;
 - (void)setPagebarHidden:(BOOL)yesOrNo;
+- (void)setDocument:(ReaderDocument *)document;
 - (void)showThumbnailsView;
 - (void)showPrintDialogNextTo:(UIButton *)button;
 - (void)showMailSender;
 - (void)addBookmarkOnCurrentPage;
+- (void)showDocument:(id)object;
+
 
 @end
