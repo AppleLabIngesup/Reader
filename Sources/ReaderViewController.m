@@ -770,25 +770,36 @@
 
 - (void)tappedInToolbar:(ReaderMainToolbar *)toolbar thumbsButton:(UIButton *)button
 {
-	if (printInteraction != nil) [printInteraction dismissAnimated:NO]; // Dismiss
+    [self showThumbnailsView];
+}
 
-	ThumbsViewController *thumbsViewController = [[ThumbsViewController alloc] initWithReaderDocument:document];
+- (void)showThumbnailsView
+{
+    if (printInteraction != nil) [printInteraction dismissAnimated:NO]; // Dismiss
 
-	thumbsViewController.delegate = self; thumbsViewController.title = self.title;
+    ThumbsViewController *thumbsViewController = [[ThumbsViewController alloc] initWithReaderDocument:document];
 
-	thumbsViewController.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-	thumbsViewController.modalPresentationStyle = UIModalPresentationFullScreen;
+    thumbsViewController.delegate = self;
+    thumbsViewController.title = self.title;
 
-	[self presentModalViewController:thumbsViewController animated:NO];
+    thumbsViewController.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+    thumbsViewController.modalPresentationStyle = UIModalPresentationFullScreen;
+
+    [self presentModalViewController:thumbsViewController animated:NO];
 }
 
 - (void)tappedInToolbar:(ReaderMainToolbar *)toolbar printButton:(UIButton *)button
 {
+    [self showPrintDialogNextTo:button];
+}
+
+- (void)showPrintDialogNextTo:(UIButton *)button
+{
 #if (READER_ENABLE_PRINT == TRUE) // Option
 
-	Class printInteractionController = NSClassFromString(@"UIPrintInteractionController");
+    Class printInteractionController = NSClassFromString(@"UIPrintInteractionController");
 
-	if ((printInteractionController != nil) && [printInteractionController isPrintingAvailable])
+    if ((printInteractionController != nil) && [printInteractionController isPrintingAvailable])
 	{
 		NSURL *fileURL = document.fileURL; // Document file URL
 
@@ -809,74 +820,84 @@
 			if ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPad)
 			{
 				[printInteraction presentFromRect:button.bounds inView:button animated:YES completionHandler:
-					^(UIPrintInteractionController *pic, BOOL completed, NSError *error)
-					{
-						#ifdef DEBUG
-							if ((completed == NO) && (error != nil)) NSLog(@"%s %@", __FUNCTION__, error);
-						#endif
-					}
-				];
+                        ^(UIPrintInteractionController *pic, BOOL completed, NSError *error)
+                        {
+#ifdef DEBUG
+                            if ((completed == NO) && (error != nil)) NSLog(@"%s %@", __FUNCTION__, error);
+#endif
+                        }
+                ];
 			}
 			else // Presume UIUserInterfaceIdiomPhone
 			{
 				[printInteraction presentAnimated:YES completionHandler:
-					^(UIPrintInteractionController *pic, BOOL completed, NSError *error)
-					{
-						#ifdef DEBUG
-							if ((completed == NO) && (error != nil)) NSLog(@"%s %@", __FUNCTION__, error);
-						#endif
-					}
-				];
+                        ^(UIPrintInteractionController *pic, BOOL completed, NSError *error)
+                        {
+#ifdef DEBUG
+                            if ((completed == NO) && (error != nil)) NSLog(@"%s %@", __FUNCTION__, error);
+#endif
+                        }
+                ];
 			}
 		}
 	}
-
 #endif // end of READER_ENABLE_PRINT Option
 }
 
 - (void)tappedInToolbar:(ReaderMainToolbar *)toolbar emailButton:(UIButton *)button
 {
+    [self showMailSender];
+}
+
+- (void)showMailSender
+{
 #if (READER_ENABLE_MAIL == TRUE) // Option
 
-	if ([MFMailComposeViewController canSendMail] == NO) return;
+    if ([MFMailComposeViewController canSendMail] == NO) return;
 
-	if (printInteraction != nil) [printInteraction dismissAnimated:YES];
+    if (printInteraction != nil) [printInteraction dismissAnimated:YES];
 
-	unsigned long long fileSize = [document.fileSize unsignedLongLongValue];
+    unsigned long long fileSize = [document.fileSize unsignedLongLongValue];
 
-	if (fileSize < (unsigned long long)15728640) // Check attachment size limit (15MB)
-	{
-		NSURL *fileURL = document.fileURL; NSString *fileName = document.fileName; // Document
+    if (fileSize < (unsigned long long)15728640) // Check attachment size limit (15MB)
+    {
+        NSURL *fileURL = document.fileURL; NSString *fileName = document.fileName; // Document
 
-		NSData *attachment = [NSData dataWithContentsOfURL:fileURL options:(NSDataReadingMapped|NSDataReadingUncached) error:nil];
+        NSData *attachment = [NSData dataWithContentsOfURL:fileURL options:(NSDataReadingMapped|NSDataReadingUncached) error:nil];
 
-		if (attachment != nil) // Ensure that we have valid document file attachment data
-		{
-			MFMailComposeViewController *mailComposer = [MFMailComposeViewController new];
+        if (attachment != nil) // Ensure that we have valid document file attachment data
+        {
+            MFMailComposeViewController *mailComposer = [MFMailComposeViewController new];
 
-			[mailComposer addAttachmentData:attachment mimeType:@"application/pdf" fileName:fileName];
+            [mailComposer addAttachmentData:attachment mimeType:@"application/pdf" fileName:fileName];
 
-			[mailComposer setSubject:fileName]; // Use the document file name for the subject
+            [mailComposer setSubject:fileName]; // Use the document file name for the subject
 
-			mailComposer.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-			mailComposer.modalPresentationStyle = UIModalPresentationFormSheet;
+            mailComposer.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+            mailComposer.modalPresentationStyle = UIModalPresentationFormSheet;
 
-			mailComposer.mailComposeDelegate = self; // Set the delegate
+            mailComposer.mailComposeDelegate = self; // Set the delegate
 
-			[self presentModalViewController:mailComposer animated:YES];
-		}
-	}
+            [self presentModalViewController:mailComposer animated:YES];
+        }
+    }
 
 #endif // end of READER_ENABLE_MAIL Option
 }
 
 - (void)tappedInToolbar:(ReaderMainToolbar *)toolbar markButton:(UIButton *)button
 {
-	if (printInteraction != nil) [printInteraction dismissAnimated:YES];
+    [self addBookmarkOnCurrentPage];
 
-	NSInteger page = [document.pageNumber integerValue];
+}
 
-	if ([document.bookmarks containsIndex:page]) // Remove bookmark
+- (void)addBookmarkOnCurrentPage
+{
+    if (printInteraction != nil) [printInteraction dismissAnimated:YES];
+
+    NSUInteger page = (NSUInteger) [document.pageNumber integerValue];
+
+    if ([document.bookmarks containsIndex:page]) // Remove bookmark
 	{
 		[mainToolbar setBookmarkState:NO]; [document.bookmarks removeIndex:page];
 	}
