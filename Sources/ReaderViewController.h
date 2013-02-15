@@ -47,5 +47,9 @@
 
 - (void)setToolbarHidden:(BOOL)yesOrNo;
 - (void)setPagebarHidden:(BOOL)yesOrNo;
+- (void)showThumbnailsView;
+- (void)showPrintDialogNextTo:(UIButton *)button;
+- (void)showMailSender;
+- (void)addBookmarkOnCurrentPage;
 
 @end
