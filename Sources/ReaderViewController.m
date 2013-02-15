@@ -57,6 +57,7 @@
 	NSDate *lastHideTime;
 
 	BOOL isVisible;
+    BOOL _documentChanged;
 }
 
 #pragma mark Constants
@@ -134,7 +135,7 @@
 
 - (void)showDocumentPage:(NSInteger)page
 {
-	if (page != currentPage) // Only if different
+	if (page != currentPage || _documentChanged) // Only if different
 	{
 		NSInteger minValue; NSInteger maxValue;
 		NSInteger maxPage = [self.document.pageCount integerValue];
@@ -261,6 +262,7 @@
 		[self updateToolbarBookmarkIcon]; // Update bookmark
 
 		currentPage = page; // Track current page number
+        _documentChanged = NO;
 	}
 }
 
@@ -268,6 +270,7 @@
 {
     _document = document;
     isVisible = NO;
+    _documentChanged = YES;
     [self showDocument:document];
 }
 
