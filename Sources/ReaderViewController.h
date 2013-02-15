@@ -40,7 +40,12 @@
 @interface ReaderViewController : UIViewController
 
 @property (nonatomic, unsafe_unretained, readwrite) id <ReaderViewControllerDelegate> delegate;
+@property (nonatomic, setter=setToolbarHidden:) BOOL toolbarHidden;
+@property (nonatomic, setter=setPagebarHidden:) BOOL pagebarHidden;
 
 - (id)initWithReaderDocument:(ReaderDocument *)object;
+
+- (void)setToolbarHidden:(BOOL)yesOrNo;
+- (void)setPagebarHidden:(BOOL)yesOrNo;
 
 @end

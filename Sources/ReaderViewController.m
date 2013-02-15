@@ -305,6 +305,25 @@
 	return reader;
 }
 
+- (void)setToolbarHidden:(BOOL)yesOrNo
+{
+    if (!mainToolbar) return;
+    if (yesOrNo)
+        [mainToolbar hideToolbar];
+    else
+        [mainToolbar showToolbar];
+}
+
+- (void)setPagebarHidden:(BOOL)yesOrNo
+{
+    if (!mainPagebar) return;
+    if (yesOrNo)
+        [mainPagebar hidePagebar];
+    else
+        [mainPagebar showPagebar];
+}
+
+
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
@@ -335,9 +354,8 @@
 	toolbarRect.size.height = TOOLBAR_HEIGHT;
 
 	mainToolbar = [[ReaderMainToolbar alloc] initWithFrame:toolbarRect document:document]; // At top
-
 	mainToolbar.delegate = self;
-
+    mainToolbar.hidden = self.toolbarHidden;
 	[self.view addSubview:mainToolbar];
 
 	CGRect pagebarRect = viewRect;
@@ -345,9 +363,8 @@
 	pagebarRect.origin.y = (viewRect.size.height - PAGEBAR_HEIGHT);
 
 	mainPagebar = [[ReaderMainPagebar alloc] initWithFrame:pagebarRect document:document]; // At bottom
-
 	mainPagebar.delegate = self;
-
+    mainPagebar.hidden = self.pagebarHidden;
 	[self.view addSubview:mainPagebar];
 
 	UITapGestureRecognizer *singleTapOne = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleSingleTap:)];
