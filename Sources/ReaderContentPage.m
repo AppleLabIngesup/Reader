@@ -29,14 +29,31 @@
 #import "CGPDFDocument.h"
 
 // @see http://www.verypdf.com/document/pdf-format-reference/pg_0615.htm
-enum ReaderAnnotationType {
-    ReaderAnnotationTypeLink = (int) "Link",
-    ReaderAnnotationTypeText = (int) "Text",
-    ReaderAnnotationTypeFreeText = (int) "FreeText",
-    ReaderAnnotationTypeSquare = (int) "Square",
-    ReaderAnnotationTypeCircle = (int) "Circle"
-
-};
+#define kReaderAnnotationTypeLink "Link"
+#define kReaderAnnotationTypeText "Text"
+#define kReaderAnnotationTypeFreeText "FreeText"
+#define kReaderAnnotationTypeSquare "Square"
+#define kReaderAnnotationTypeCircle "Circle"
+#define kReaderAnnotationTypeLine "Line"
+#define kReaderAnnotationTypePolygon "Polygon"
+#define kReaderAnnotationTypePolyLine "PolyLine"
+#define kReaderAnnotationTypeHighlight "Highlight"
+#define kReaderAnnotationTypeUnderline "Underline"
+#define kReaderAnnotationTypeSquiggly "Squiggly"
+#define kReaderAnnotationTypeStrikeOut "StrikeOut"
+#define kReaderAnnotationTypeStamp "Stamp"
+#define kReaderAnnotationTypeCaret "Caret"
+#define kReaderAnnotationTypeInk "Ink"
+#define kReaderAnnotationTypePopup "Popup"
+#define kReaderAnnotationTypeFileAttachement "FileAttachement"
+#define kReaderAnnotationTypeSound "Sound"
+#define kReaderAnnotationTypeMovie "Movie"
+#define kReaderAnnotationTypeWidget "Widget"
+#define kReaderAnnotationTypeScreen "Screen"
+#define kReaderAnnotationTypePrinterMark "PrinterMark"
+#define kReaderAnnotationTypeTrapNet "TrapNet"
+#define kReaderAnnotationTypeWatermark "Watermark"
+#define kReaderAnnotationType3D "3D"
 
 @implementation ReaderContentPage
 {
@@ -53,6 +70,7 @@ enum ReaderAnnotationType {
 
     CGFloat _pageOffsetX;
     CGFloat _pageOffsetY;
+    CGPDFArrayRef _annotArray;
 }
 
 #pragma mark ReaderContentPage class methods
@@ -173,11 +191,36 @@ enum ReaderAnnotationType {
 
 - (CGPDFArrayRef)getAnnotationList
 {
-    CGPDFArrayRef res = NULL;
-    CGPDFDictionaryRef pDict = CGPDFPageGetDictionary(_PDFPageRef);
-    CGPDFDictionaryGetArray(pDict, (char const *) "Annots", &res);
-    return res;
+    static dispatch_once_t annot_dispatch;
+    dispatch_once(&annot_dispatch, ^
+    {
+        _annotArray = NULL;
+        CGPDFDictionaryRef annotationDict = CGPDFPageGetDictionary(_PDFPageRef);
+        CGPDFDictionaryGetArray(annotationDict, (char const *) "Annots", &_annotArray);
+    });
+    return _annotArray;
 }
+
+- (CGPDFDictionaryRef)filterAnnotationsWithSubtype:(const char*)kAnnotationType
+{
+    NSMutableArray *result = [NSMutableArray new];
+    CGPDFArrayRef pA = [self getAnnotationList];
+    if (!!pA)
+    {
+        for (size_t i = 0, l = CGPDFArrayGetCount(pA); i < l; ++i)
+        {
+            CGPDFDictionaryRef aD = NULL;
+            if (!CGPDFArrayGetDictionary(pA, i, &aD)) continue;
+            const char *aSubtype = NULL;
+            if (!CGPDFDictionaryGetName(aD, "Subtype", &aSubtype)) continue;
+            if (!~strcmp(aSubtype, kAnnotationType)) continue;
+            // Yay we found one !
+            // TODO
+            //[result addObject:];
+        }
+    }
+}
+
 
 - (void)buildAnnotationLinksList
 {
@@ -187,7 +230,7 @@ enum ReaderAnnotationType {
     {
         NSInteger count = CGPDFArrayGetCount(pageAnnotations); // Number of annotations
 
-        for (NSInteger index = 0; index < count; index++) // Iterate through all annotations
+        for (size_t index = 0; index < count; index++) // Iterate through all annotations
         {
             CGPDFDictionaryRef annotationDictionary = NULL; // PDF annotation dictionary
 
