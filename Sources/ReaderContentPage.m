@@ -201,26 +201,29 @@
     return _annotArray;
 }
 
-- (CGPDFDictionaryRef)filterAnnotationsWithSubtype:(const char*)kAnnotationType
+- (NSArray *)filterAnnotationsWithSubtype:(const char*)kAnnotationType
 {
     NSMutableArray *result = [NSMutableArray new];
     CGPDFArrayRef pA = [self getAnnotationList];
+
     if (!!pA)
     {
         for (size_t i = 0, l = CGPDFArrayGetCount(pA); i < l; ++i)
         {
             CGPDFDictionaryRef aD = NULL;
-            if (!CGPDFArrayGetDictionary(pA, i, &aD)) continue;
             const char *aSubtype = NULL;
-            if (!CGPDFDictionaryGetName(aD, "Subtype", &aSubtype)) continue;
-            if (!~strcmp(aSubtype, kAnnotationType)) continue;
-            // Yay we found one !
-            // TODO
-            //[result addObject:];
+
+            if (!CGPDFArrayGetDictionary(pA, i, &aD)
+            || !CGPDFDictionaryGetName(aD, "Subtype", &aSubtype)
+            || !strcmp(aSubtype, kAnnotationType))
+                continue;
+
+            [result addObject:[NSValue valueWithPointer:aD]];
         }
     }
-}
 
+    return result;
+}
 
 - (void)buildAnnotationLinksList
 {

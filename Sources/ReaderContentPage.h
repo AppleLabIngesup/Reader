@@ -31,6 +31,10 @@
 
 - (id)processSingleTap:(UITapGestureRecognizer *)recognizer;
 
+- (CGPDFArrayRef)getAnnotationList;
+
+- (NSArray *)filterAnnotationsWithSubtype:(char const *)kAnnotationType;
+
 @end
 
 #pragma mark -
