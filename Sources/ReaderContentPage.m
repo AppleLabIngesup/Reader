@@ -27,33 +27,9 @@
 #import "ReaderContentPage.h"
 #import "ReaderContentTile.h"
 #import "CGPDFDocument.h"
+#import "ReaderAnnotations.h"
 
-// @see http://www.verypdf.com/document/pdf-format-reference/pg_0615.htm
-#define kReaderAnnotationTypeLink "Link"
-#define kReaderAnnotationTypeText "Text"
-#define kReaderAnnotationTypeFreeText "FreeText"
-#define kReaderAnnotationTypeSquare "Square"
-#define kReaderAnnotationTypeCircle "Circle"
-#define kReaderAnnotationTypeLine "Line"
-#define kReaderAnnotationTypePolygon "Polygon"
-#define kReaderAnnotationTypePolyLine "PolyLine"
-#define kReaderAnnotationTypeHighlight "Highlight"
-#define kReaderAnnotationTypeUnderline "Underline"
-#define kReaderAnnotationTypeSquiggly "Squiggly"
-#define kReaderAnnotationTypeStrikeOut "StrikeOut"
-#define kReaderAnnotationTypeStamp "Stamp"
-#define kReaderAnnotationTypeCaret "Caret"
-#define kReaderAnnotationTypeInk "Ink"
-#define kReaderAnnotationTypePopup "Popup"
-#define kReaderAnnotationTypeFileAttachement "FileAttachement"
-#define kReaderAnnotationTypeSound "Sound"
-#define kReaderAnnotationTypeMovie "Movie"
-#define kReaderAnnotationTypeWidget "Widget"
-#define kReaderAnnotationTypeScreen "Screen"
-#define kReaderAnnotationTypePrinterMark "PrinterMark"
-#define kReaderAnnotationTypeTrapNet "TrapNet"
-#define kReaderAnnotationTypeWatermark "Watermark"
-#define kReaderAnnotationType3D "3D"
+
 
 @implementation ReaderContentPage
 {
@@ -70,7 +46,9 @@
 
     CGFloat _pageOffsetX;
     CGFloat _pageOffsetY;
+
     CGPDFArrayRef _annotArray;
+    dispatch_once_t _annot_dispatch;
 }
 
 #pragma mark ReaderContentPage class methods
@@ -191,12 +169,11 @@
 
 - (CGPDFArrayRef)getAnnotationList
 {
-    static dispatch_once_t annot_dispatch;
-    dispatch_once(&annot_dispatch, ^
+    dispatch_once(&_annot_dispatch, ^
     {
         _annotArray = NULL;
         CGPDFDictionaryRef annotationDict = CGPDFPageGetDictionary(_PDFPageRef);
-        CGPDFDictionaryGetArray(annotationDict, (char const *) "Annots", &_annotArray);
+        CGPDFDictionaryGetArray(annotationDict, "Annots", &_annotArray);
     });
     return _annotArray;
 }
@@ -252,8 +229,9 @@
                 }
             }
         }
-
-        //[self highlightPageLinks]; // Link support debugging
+#ifdef DEBUG
+        [self highlightPageLinks]; // Link support debugging
+#endif
     }
 }
 
