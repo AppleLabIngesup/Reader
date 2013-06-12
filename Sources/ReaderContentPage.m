@@ -68,7 +68,8 @@
 
         for (ReaderDocumentLink *link in _links) // Enumerate the links array
         {
-            UIView *highlight = [[UIView alloc] initWithFrame:link.rect];
+            UIView *highlight;
+            highlight = [[UIView alloc] initWithFrame:link.rect];
 
             highlight.autoresizesSubviews = NO;
             highlight.userInteractionEnabled = NO;
